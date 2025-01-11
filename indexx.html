@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ping-Pong Game</title>
+  <style>
+    canvas {
+      background: #000;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // Ball
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballRadius = 10;
+    let ballSpeedX = 4;
+    let ballSpeedY = 4;
+
+    // Paddles
+    const paddleWidth = 10, paddleHeight = 100;
+    const playerX = 10, aiX = canvas.width - paddleWidth - 10;
+    let playerY = (canvas.height - paddleHeight) / 2;
+    let aiY = playerY;
+
+    // Score
+    let playerScore = 0, aiScore = 0;
+
+    // Player movement
+    let isUpPressed = false, isDownPressed = false;
+
+    // Event listeners
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp") isUpPressed = true;
+      if (e.key === "ArrowDown") isDownPressed = true;
+    });
+
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowUp") isUpPressed = false;
+      if (e.key === "ArrowDown") isDownPressed = false;
+    });
+
+    function drawRect(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function drawCircle(x, y, radius, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function drawText(text, x, y, color) {
+      ctx.fillStyle = color;
+      ctx.font = "30px Arial";
+      ctx.fillText(text, x, y);
+    }
+
+    function resetBall() {
+      ballX = canvas.width / 2;
+      ballY = canvas.height / 2;
+      ballSpeedX *= -1;
+    }
+
+    function update() {
+      // Ball movement
+      ballX += ballSpeedX;
+      ballY += ballSpeedY;
+
+      // Ball collision with top/bottom walls
+      if (ballY - ballRadius < 0 || ballY + ballRadius > canvas.height) {
+        ballSpeedY *= -1;
+      }
+
+      // Ball collision with paddles
+      if (
+        ballX - ballRadius < playerX + paddleWidth &&
+        ballY > playerY &&
+        ballY < playerY + paddleHeight
+      ) {
+        ballSpeedX *= -1;
+      }
+
+      if (
+        ballX + ballRadius > aiX &&
+        ballY > aiY &&
+        ballY < aiY + paddleHeight
+      ) {
+        ballSpeedX *= -1;
+      }
+
+      // Scoring
+      if (ballX - ballRadius < 0) {
+        aiScore++;
+        resetBall();
+      }
+
+      if (ballX + ballRadius > canvas.width) {
+        playerScore++;
+        resetBall();
+      }
+
+      // AI movement
+      aiY += (ballY - (aiY + paddleHeight / 2)) * 0.1;
+
+      // Player movement
+      if (isUpPressed && playerY > 0) {
+        playerY -= 6;
+      }
+      if (isDownPressed && playerY < canvas.height - paddleHeight) {
+        playerY += 6;
+      }
+    }
+
+    function render() {
+      drawRect(0, 0, canvas.width, canvas.height, "#000");
+      drawRect(playerX, playerY, paddleWidth, paddleHeight, "#fff");
+      drawRect(aiX, aiY, paddleWidth, paddleHeight, "#fff");
+      drawCircle(ballX, ballY, ballRadius, "#fff");
+      drawText(playerScore, canvas.width / 4, 50, "#fff");
+      drawText(aiScore, (canvas.width * 3) / 4, 50, "#fff");
+    }
+
+    function gameLoop() {
+      update();
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
